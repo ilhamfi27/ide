@@ -42,3 +42,13 @@ Your are more than welcome to support Judge0 development on [Patreon](https://ww
 
 ## License
 Judge0 IDE is licensed under the [MIT License](https://github.com/judge0/ide/blob/master/LICENSE).
+
+## Running This Apps Locally With Docker Compose
+```
+$ cd misc/docker
+
+$ docker-compose build judge0
+
+$ docker-compose up -d
+```
+After all service starting up, open ```http://localhost:8080``` in your browser

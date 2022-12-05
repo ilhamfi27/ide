@@ -1,0 +1,81 @@
+version: '2'
+
+x-logging: &default-logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 100m
+
+services:
+  judge0:
+    image: ilhamfadhilah/judge0:dev
+    build: 
+      context: ../../
+      dockerfile: ./misc/docker/dockerfile
+    restart: always
+    working_dir: ${PWD}/../..
+    volumes:
+      - ../../:/usr/share/nginx/html
+    ports:
+      - '8080:80'
+
+  server:
+    image: judge0/judge0:1.13.0
+    volumes:
+      - ./judge0.conf:/judge0.conf:ro
+    ports:
+      - '2358:2358'
+    privileged: true
+    <<: *default-logging
+    restart: always
+    networks:
+      default:
+
+  workers:
+    image: judge0/judge0:1.13.0
+    command: ['./scripts/workers']
+    volumes:
+      - ./judge0.conf:/judge0.conf:ro
+    privileged: true
+    <<: *default-logging
+    restart: always
+    networks:
+      default:
+
+  db:
+    image: postgres:13.0
+    env_file: judge0.conf
+    volumes:
+      - ./volumes/pgsql/data:/var/lib/postgresql/data/
+    <<: *default-logging
+    restart: always
+    networks:
+      default:
+
+  redis:
+    image: redis:6.0
+    command:
+      [
+        'bash',
+        '-c',
+        'docker-entrypoint.sh --appendonly yes --requirepass "$$REDIS_PASSWORD"',
+      ]
+    env_file: judge0.conf
+    volumes:
+      - ./volumes/redis/data:/data
+    <<: *default-logging
+    restart: always
+    networks:
+      default:
+
+  adminer:
+    image: adminer
+    restart: unless-stopped
+    ports:
+      - '8910:8080'
+    <<: *default-logging
+    networks:
+      default:
+
+networks:
+  default:
